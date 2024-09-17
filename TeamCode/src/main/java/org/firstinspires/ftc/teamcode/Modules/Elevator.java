@@ -71,10 +71,26 @@ public class Elevator {
             {state = State.GOING_DOWN;t.reset();}
         switch (state) {
             case GOING_UP:
-                if(t.milliseconds()<1500){
-                    //make a pid to move un , doi , trei to state.position}
+                go(state.position);
+                if(t.milliseconds()>2600)
+                    state = state.nextState;
+            case GOING_DOWN:
+                go(state.position);
+                if(t.milliseconds()>2600)
+                    state = state.nextState;
+            case UP:
+                rest();
+            case DOWN:
+                rest();
 
-        };
+        }
+    }
+    public void go(int targetPos)
+    {
 
     }
-}}
+    public void rest()
+    {
+
+    }
+}
