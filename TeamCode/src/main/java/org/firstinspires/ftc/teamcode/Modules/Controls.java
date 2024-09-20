@@ -7,8 +7,10 @@ public class Controls {
 
     public static Gamepad gamepad1;
     public static Gamepad gamepad2;
-    public static boolean intakefr,intakerev,elevup,lgc,rgc,elevdown,plane,climb,ready4int = true;
+    public static boolean intakefr,intakerev,elevup,lgc,rgc,elevdown,plane,climb,ready4int = true,rot = false;
     public static int rotatelvl, elevatorLvl;
+
+    public static boolean optionsPrev = false;
     ElapsedTime cnt;
     public Controls(Gamepad gp1, Gamepad gp2){
         gamepad1 = gp1;
@@ -54,13 +56,14 @@ public class Controls {
 
 
         //brat
-        if(gamepad1.options)
-        {
-            if(rotatelvl<3)
-                rotatelvl++;
-            else
-                rotatelvl = 0;
+        if(gamepad1.options&&!optionsPrev){
+            rot = true;
+        if(rotatelvl<3) rotatelvl++;
+        else rotatelvl = 0;
         }
+        else if(optionsPrev) rot = false;
+        optionsPrev = gamepad1.options;
+
 
         //end game
         if(gamepad1.share)

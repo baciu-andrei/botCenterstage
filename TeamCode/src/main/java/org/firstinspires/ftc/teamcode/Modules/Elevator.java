@@ -12,11 +12,21 @@ import java.util.ArrayList;
 public class Elevator {
 
     ElapsedTime t;
+    PidControler pid;
     DcMotorEx un,doi,trei;
+    double pwr;
     static int groundPos = 0, level = 0, incrementPos = 50, firstLevelPos = 20;
     private static final PIDFCoefficients MOTOR_PIDF = new PIDFCoefficients(10.0, 3.0, 0.0, 0.0);
+    ArrayList<DcMotorEx> motorListElevator = new ArrayList<>();
 
-    enum State{
+    public void add()
+    {
+        motorListElevator.add(un);
+        motorListElevator.add(doi);
+        motorListElevator.add(trei);
+    }
+
+    public enum State{
         DOWN(groundPos), GOING_DOWN(groundPos, DOWN),
         UP(groundPos + firstLevelPos +level* incrementPos), GOING_UP(groundPos + firstLevelPos +level* incrementPos, UP);
 
@@ -40,15 +50,10 @@ public class Elevator {
         un = hm.get(DcMotorEx.class, "un");
         doi = hm.get(DcMotorEx.class, "doi");
         trei = hm.get(DcMotorEx.class, "trei");
-
+        add();
         //un.setDirection(DcMotorSimple.Direction.REVERSE);
         //doi.setDirection(DcMotorSimple.Direction.REVERSE);
         //trei.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        ArrayList<DcMotorEx> motorListElevator = new ArrayList<>();
-        motorListElevator.add(un);
-        motorListElevator.add(doi);
-        motorListElevator.add(trei);
 
         for(DcMotorEx motorElevator : motorListElevator){
             motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -59,38 +64,45 @@ public class Elevator {
             motorElevator.setMotorType(motorConfigurationType);
             motorElevator.setTargetPosition(motorElevator.getCurrentPosition());
             motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motorElevator.setPower(1);
+            motorElevator.setPower(-1);
         }
     }
 
 
     public void update(){
         if(Controls.elevup && state != State.GOING_UP)
-            {state = State.GOING_UP;t.reset();}
+        {state = State.GOING_UP;t.reset();pid.setTargetPosition(state.position);}
         if(Controls.elevdown && state != State.GOING_DOWN)
-            {state = State.GOING_DOWN;t.reset();}
+        {state = State.GOING_DOWN;t.reset();pid.setTargetPosition(state.position);}
         switch (state) {
             case GOING_UP:
-                go(state.position);
-                if(t.milliseconds()>2600)
-                    state = state.nextState;
             case GOING_DOWN:
-                go(state.position);
+                go();
                 if(t.milliseconds()>2600)
                     state = state.nextState;
+                break;
             case UP:
-                rest();
             case DOWN:
                 rest();
+                break;
 
         }
     }
-    public void go(int targetPos)
+    public void go()
     {
+        pwr = pid.calculate(un.getCurrentPosition());
+        for(DcMotorEx motorElevator : motorListElevator) {
+            motorElevator.setPower(pwr);
+        }
 
     }
     public void rest()
     {
-
+        for(DcMotorEx motorElevator : motorListElevator) {
+            motorElevator.setPower(0);
+        }
+    }
+    public State getState(){
+        return state;
     }
 }
